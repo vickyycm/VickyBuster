@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOCKBUSTER</title>
+        <link rel="stylesheet" href="css/styles.css" >
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="header-box">
+            <nav class="navbar">
+              <div class="header-inner">
+                <div class="logo">
+                  <img src="assets/vickybuster.png" alt="BLOCKBUSTER Logo" class="logo-img" />
+                </div>
+                <span class="counter-badge"><span id="header-count">0</span> películas</span>
+              </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-layout">
+        <aside class="sidebar">
+ 
+      <!--formulario-->
+      <section class="panel form-panel">
+        <h2 class="panel-title">Nueva Película</h2>
+ 
+        <div class="form-group">
+          <label for="input-titulo">Título</label>
+          <input type="text" id="input-titulo" placeholder="Ej: Oppenheimer" />
+        </div>
+ 
+        <div class="form-group">
+          <label for="input-genero">Género</label>
+          <select id="input-genero">
+            <option value="">— Seleccionar —</option>
+            <option value="Acción">Acción</option>
+            <option value="Drama">Drama</option>
+            <option value="Comedia">Comedia</option>
+            <option value="Terror">Terror</option>
+            <option value="Ciencia Ficción">Ciencia Ficción</option>
+            <option value="Animación">Animación</option>
+            <option value="Thriller">Thriller</option>
+            <option value="Documental">Documental</option>
+            <option value="Romance">Romance</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+ 
+        <div class="form-group">
+          <label for="input-puntaje">Puntaje <span class="muted">(1–10)</span></label>
+          <input type="number" id="input-puntaje" min="1" max="10" placeholder="8" />
+        </div>
+ 
+        <div class="form-group">
+          <label>Estado</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="estado" value="vista" /> Vista
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="estado" value="pendiente" checked /> Pendiente
+            </label>
+          </div>
+        </div>
+ 
+        <button id="btn-agregar" class="btn btn-primary">+ Agregar película</button>
+        <div id="form-error" class="form-error"></div>
+      </section>
+ 
+      <!--filtrado-->
+      <section class="panel filters-panel">
+        <h2 class="panel-title">Filtros</h2>
+ 
+        <div class="form-group">
+          <label for="filtro-estado">Por estado</label>
+          <select id="filtro-estado">
+            <option value="todos">Todas</option>
+            <option value="vista">Vistas</option>
+            <option value="pendiente">Pendientes</option>
+          </select>
+        </div>
+ 
+        <div class="form-group">
+          <label for="filtro-genero">Por género</label>
+          <select id="filtro-genero">
+            <option value="todos">Todos los géneros</option>
+          </select>
+        </div>
+ 
+        <button id="btn-limpiar-filtros" class="btn btn-ghost">Borrar filtros</button>
+      </section>
+ 
+    </aside>
+ 
+    <!--peliculas agregadas-->
+    <section class="content-area">
+      <!--porcentajes-->
+      <section class="panel metrics-panel">
+        <h2 class="panel-title">Mi nivel de fanático:</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-value" id="met-total">0</span>
+            <span class="metric-label">Total</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-value" id="met-vistas">0</span>
+            <span class="metric-label">Vistas</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-value" id="met-promedio">—</span>
+            <span class="metric-label">Puntaje promedio</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="content-header">
+        <h1 class="section-title">Mi collección: </h1>
+        <span id="resultado-count" class="result-count"></span>
+      </div>
+ 
+      <!--Lista de películas-->
+      <div class="movies-container-wrapper">
+        <div id="movies-container" class="movies-grid"></div>
+      </div>
+ 
+      <!--no hay películas-->
+      <div id="empty-state" class="empty-state" style="display:none;">
+        <span class="empty-icon">🎬</span>
+        <p class="empty-title">No hay películas todavía</p>
+        <p class="empty-sub">Agregá tu primera película !</p>
+      </div>
+    </section>
+ 
+  </main>
+ 
+  <!--editar-->
+  <div id="modal-overlay" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <button id="modal-close" class="modal-close">✕</button>
+      <h2 class="panel-title">Editar Película</h2>
+ 
+      <div class="form-group">
+        <label for="edit-titulo">Título</label>
+        <input type="text" id="edit-titulo" />
+      </div>
+ 
+      <div class="form-group">
+        <label for="edit-genero">Género</label>
+        <select id="edit-genero">
+          <option value="Acción">Acción</option>
+          <option value="Drama">Drama</option>
+          <option value="Comedia">Comedia</option>
+          <option value="Terror">Terror</option>
+          <option value="Ciencia Ficción">Ciencia Ficción</option>
+          <option value="Animación">Animación</option>
+          <option value="Thriller">Thriller</option>
+          <option value="Documental">Documental</option>
+          <option value="Romance">Romance</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+ 
+      <div class="form-group">
+        <label for="edit-puntaje">Puntaje (1–10)</label>
+        <input type="number" id="edit-puntaje" min="1" max="10" />
+      </div>
+ 
+      <div class="form-group">
+        <label>Estado</label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="edit-estado" value="vista" /> Vista
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="edit-estado" value="pendiente" /> Pendiente
+          </label>
+        </div>
+      </div>
+ 
+      <button id="btn-guardar-edicion" class="btn btn-primary">Guardar cambios</button>
+    </div>
+  </div>
+  
+    </main>
+
+    <footer>
+
+    </footer>
+
+        <script src="js/app.js" ></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+</body>
+
+</html>
