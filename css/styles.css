@@ -29,7 +29,7 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: "Alfa Slab One", serif;
-  background: var(--bg);
+  background: var(--bg) !important;
   color: var(--text);
   font-family: var(--font-body);
   font-size: 14px;
@@ -45,8 +45,7 @@ main.main-layout {
   display: grid;
   grid-template-columns: 300px 1fr;
   gap: 28px;
-  position: relative;
-  z-index: 1;
+  z-index: 0;
   box-sizing: border-box;
 }
 
@@ -99,7 +98,7 @@ body::before {
 }
 
 .logo-img {
-  height: 55px;
+  height: 100px;
   max-width: 280px;
   width: auto;
   display: block;
@@ -116,8 +115,6 @@ body::before {
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
-
-
 
 .sidebar {
   display: flex;
@@ -249,7 +246,6 @@ input[type="radio"] {
 }
 .btn-primary:hover {
   background: linear-gradient(135deg, #E6C55F 0%, #D4AF37 100%);
-  box-shadow: 0 3px 10px rgba(212, 175, 55, 0.2);
 }
 .btn-primary:active { 
   opacity: 0.95;
@@ -257,13 +253,13 @@ input[type="radio"] {
 
 .btn-ghost {
   background: transparent;
-  color: #E6C55F;
-  border: 2px solid #D4AF37;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
   margin-top: 4px;
 }
 .btn-ghost:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: #E6C55F;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #FFFFFF;
   color: #FFFFFF;
 }
 
@@ -291,7 +287,7 @@ input[type="radio"] {
 }
 
 .metric-card:hover {
-  box-shadow: 0 0 16px rgba(212, 175, 55, 0.25);
+  transform: translateY(-2px);
 }
 
 .metric-card--wide {
@@ -344,12 +340,14 @@ input[type="radio"] {
   color: var(--text-muted);
   font-weight: 600;
 }
+
 .movies-container-wrapper {
   background: rgba(10, 20, 40, 0.4);
   border-radius: var(--radius-lg);
   padding: 18px;
   border: 1px solid rgba(45, 90, 128, 0.3);
 }
+
 .movies-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -372,7 +370,6 @@ input[type="radio"] {
 .movie-card:hover {
   border-color: var(--accent);
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.15);
   background: var(--surface-2);
 }
 
@@ -386,9 +383,10 @@ input[type="radio"] {
 .card-title {
   font-size: 16px;
   font-weight: 600;
-  color: #FFFFFF;
+  color: #FFFFFF !important;
   line-height: 1.3;
   flex: 1;
+  text-shadow: none;
 }
 
 .card-score {
@@ -474,7 +472,6 @@ input[type="radio"] {
 
 .btn-icon:hover {
   background: linear-gradient(135deg, #E6C55F 0%, #D4AF37 100%);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
   transform: translateY(-2px);
 }
 
@@ -486,13 +483,16 @@ input[type="radio"] {
 
 .btn-icon--danger:hover {
   background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
-  box-shadow: 0 0 12px rgba(239, 83, 80, 0.3);
 }
 
 .empty-state {
   text-align: center;
   padding: 100px 20px;
   color: var(--text-dim);
+}
+
+.empty-state.hidden {
+  display: none !important;
 }
 
 .empty-icon {
@@ -517,42 +517,61 @@ input[type="radio"] {
   color: var(--text-muted);
 }
 
-.modal-overlay {
+.edit-modal {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.8);
   backdrop-filter: blur(6px);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  z-index: 99999;
+  display: none;
+  place-items: center;
   padding: 20px;
-  animation: fadeIn 0.2s ease;
+  animation: editModalFadeIn 0.2s ease;
+  pointer-events: auto;
 }
 
-@keyframes fadeIn {
+@keyframes editModalFadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-.modal {
+.edit-modal-box {
   background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
   border: 2px solid var(--accent);
   border-radius: var(--radius-lg);
   padding: 32px;
-  width: 100%;
-  max-width: 450px;
   position: relative;
+  z-index: 10000;
   box-shadow: 0 0 30px rgba(212, 175, 55, 0.15), 0 24px 64px rgba(0,0,0,0.6);
-  animation: slideUp 0.25s ease;
+  animation: editModalSlideUp 0.25s ease;
+  pointer-events: auto;
 }
 
-@keyframes slideUp {
+.edit-modal-box > * {
+  visibility: visible;
+  opacity: 1;
+}
+
+.edit-modal-box .form-group {
+  margin-bottom: 12px;
+}
+
+.edit-modal-box input[type="text"],
+.edit-modal-box input[type="number"],
+.edit-modal-box select {
+  width: 100%;
+}
+
+.edit-modal-box .btn {
+  width: 100%;
+}
+
+@keyframes editModalSlideUp {
   from { transform: translateY(20px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
 
-.modal-close {
+.edit-modal-close {
   position: absolute;
   top: 16px;
   right: 16px;
@@ -570,9 +589,8 @@ input[type="radio"] {
   transition: all var(--transition);
   font-weight: bold;
 }
-.modal-close:hover { 
+.edit-modal-close:hover { 
   background: rgba(212, 175, 55, 0.08);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
 ::-webkit-scrollbar { width: 6px; }

@@ -7,13 +7,12 @@ let filtros = {
 
 let idEditando = null;
 
-
+/*localstorage*/ 
 const STORAGE_KEY = 'cinelog_peliculas';
 
 function guardarEnStorage() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(peliculas));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(peliculas, null, 2));
 }
-
 
 function cargarDesdeStorage() {
   const datos = localStorage.getItem(STORAGE_KEY);
@@ -21,8 +20,7 @@ function cargarDesdeStorage() {
 }
 
 
-
-
+/*filtros*/
 function aplicarFiltros() {
   let resultado = peliculas.filter(function(pelicula) {
     if (filtros.estado === 'todos') return true;
@@ -37,9 +35,10 @@ function aplicarFiltros() {
   return resultado;
 }
 
-
+/*funciones filtros*/ 
 function actualizarFiltroGeneros() {
   const select = document.getElementById('filtro-genero');
+  const valorActual = select.value;
 
   const generosUnicos = peliculas
     .map(function(p) { return p.genero; })
@@ -47,8 +46,6 @@ function actualizarFiltroGeneros() {
       return arr.indexOf(genero) === indice;
     })
     .sort();
-
-  const valorActual = select.value;
 
   select.innerHTML = '<option value="todos">Todos los géneros</option>';
 
@@ -63,48 +60,51 @@ function actualizarFiltroGeneros() {
 
 
 
+/*metricas de peliculas*/
 function actualizarMetricas() {
   const total = peliculas.length;
 
   const acumulado = peliculas.reduce(function(acc, pelicula) {
     if (pelicula.estado === 'vista') acc.vistas++;
-    acc.sumaPuntaje += pelicula.puntaje;
+    if (pelicula.puntaje > 0) acc.sumaPuntaje += pelicula.puntaje;
     return acc;
   }, { vistas: 0, sumaPuntaje: 0 });
 
-  const promedio = total > 0
-    ? (acumulado.sumaPuntaje / total).toFixed(1)
+  const conPuntaje = peliculas.filter(function(p) { return p.puntaje > 0; });
+  const promedio = conPuntaje.length > 0
+    ? (acumulado.sumaPuntaje / conPuntaje.length).toFixed(1)
     : '—';
 
   document.getElementById('met-total').textContent = total;
   document.getElementById('met-vistas').textContent = acumulado.vistas;
   document.getElementById('met-promedio').textContent = promedio;
 
-  const badge = document.getElementById('counter-badge');
+  const badge = document.getElementById('header-count');
   if (total > 0) {
     badge.textContent = `Viste ${acumulado.vistas} de ${total} película${total !== 1 ? 's' : ''}`;
   } else {
-    badge.textContent = '';
+    badge.textContent = '0';
   }
 }
 
 
+/*edicion de card pelicula*/
 function renderPeliculas() {
-  const container   = document.getElementById('movies-container');
-  const emptyState  = document.getElementById('empty-state');
-  const countLabel  = document.getElementById('resultado-count');
+  const container  = document.getElementById('movies-container');
+  const emptyState = document.getElementById('empty-state');
+  const countLabel = document.getElementById('resultado-count');
 
   const peliculasFiltradas = aplicarFiltros();
 
   container.innerHTML = '';
 
   if (peliculasFiltradas.length === 0) {
-    emptyState.style.display = 'block';
+    emptyState.classList.remove('hidden');
     countLabel.textContent   = peliculas.length > 0
       ? 'Sin resultados para los filtros aplicados'
       : '';
   } else {
-    emptyState.style.display = 'none';
+    emptyState.classList.add('hidden');
     countLabel.textContent   = `${peliculasFiltradas.length} película${peliculasFiltradas.length !== 1 ? 's' : ''}`;
   }
 
@@ -131,7 +131,7 @@ function crearTarjeta(pelicula) {
 
   const puntaje = document.createElement('span');
   puntaje.classList.add('card-score');
-  puntaje.textContent = pelicula.puntaje + '★';
+  puntaje.textContent = pelicula.puntaje > 0 ? pelicula.puntaje + '★' : '—';
 
   header.appendChild(titulo);
   header.appendChild(puntaje);
@@ -159,7 +159,8 @@ function crearTarjeta(pelicula) {
   const btnEditar = document.createElement('button');
   btnEditar.classList.add('btn-icon');
   btnEditar.textContent = '✎ Editar';
-  btnEditar.addEventListener('click', function() {
+  btnEditar.addEventListener('click', function(e) {
+    e.stopPropagation(); 
     abrirModalEdicion(pelicula.id);
   });
 
@@ -180,18 +181,24 @@ function crearTarjeta(pelicula) {
   return card;
 }
 
+/*toma de datos formulario*/ 
 function generarId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+  if (peliculas.length === 0) return 1;
+  const maxId = peliculas.reduce(function(max, p) {
+    return p.id > max ? p.id : max;
+  }, 0);
+  return maxId + 1;
 }
 
 function leerFormulario() {
-  const titulo  = document.getElementById('input-titulo').value.trim();
-  const genero  = document.getElementById('input-genero').value;
-  const puntaje = parseInt(document.getElementById('input-puntaje').value, 10);
+  const titulo   = document.getElementById('input-titulo').value.trim();
+  const genero   = document.getElementById('input-genero').value;
   const estadoEl = document.querySelector('input[name="estado"]:checked');
-  const estado  = estadoEl ? estadoEl.value : null;
+  const estado   = estadoEl ? estadoEl.value : null;
+  const errorEl  = document.getElementById('form-error');
 
-  const errorEl = document.getElementById('form-error');
+  const puntajeRaw = document.getElementById('input-puntaje').value;
+  const puntaje    = puntajeRaw !== '' ? parseInt(puntajeRaw, 10) : 0;
 
   if (!titulo) {
     errorEl.textContent = 'El título es obligatorio.';
@@ -201,19 +208,22 @@ function leerFormulario() {
     errorEl.textContent = 'Seleccioná un género.';
     return null;
   }
-  if (isNaN(puntaje) || puntaje < 1 || puntaje > 10) {
-    errorEl.textContent = 'El puntaje debe ser un número entre 1 y 10.';
-    return null;
-  }
   if (!estado) {
     errorEl.textContent = 'Seleccioná un estado.';
+    return null;
+  }
+  if (estado === 'vista' && (isNaN(puntaje) || puntaje < 1 || puntaje > 10)) {
+    errorEl.textContent = 'Las películas vistas requieren un puntaje entre 1 y 10.';
+    return null;
+  }
+  if (puntajeRaw !== '' && (isNaN(puntaje) || puntaje < 1 || puntaje > 10)) {
+    errorEl.textContent = 'El puntaje debe ser un número entre 1 y 10.';
     return null;
   }
 
   errorEl.textContent = '';
   return { titulo, genero, puntaje, estado };
 }
-
 
 function limpiarFormulario() {
   document.getElementById('input-titulo').value  = '';
@@ -222,7 +232,6 @@ function limpiarFormulario() {
   document.querySelector('input[name="estado"][value="pendiente"]').checked = true;
   document.getElementById('form-error').textContent = '';
 }
-
 
 function agregarPelicula() {
   const datos = leerFormulario();
@@ -256,32 +265,60 @@ function abrirModalEdicion(id) {
 
   document.getElementById('edit-titulo').value  = pelicula.titulo;
   document.getElementById('edit-genero').value  = pelicula.genero;
-  document.getElementById('edit-puntaje').value = pelicula.puntaje;
+  document.getElementById('edit-puntaje').value = pelicula.puntaje > 0 ? pelicula.puntaje : '';
 
   const radioEditar = document.querySelector(
     `input[name="edit-estado"][value="${pelicula.estado}"]`
   );
   if (radioEditar) radioEditar.checked = true;
 
-  document.getElementById('modal-overlay').style.display = 'flex';
+  setTimeout(function() {
+    const overlay = document.getElementById('edit-modal');
+    const modalInner = overlay.querySelector('.edit-modal-box');
+    
+    overlay.style.display = 'grid';
+    overlay.style.placeItems = 'center';
+    overlay.style.visibility = 'visible';
+    overlay.style.opacity = '1';
+    
+    modalInner.style.display = 'block';
+    modalInner.style.visibility = 'visible';
+    modalInner.style.opacity = '1';
+    modalInner.style.minWidth = '300px';
+    modalInner.style.maxWidth = '450px';
+    modalInner.style.width = 'auto';
+  }, 0);
 }
 
 function cerrarModal() {
-  document.getElementById('modal-overlay').style.display = 'none';
+  const overlay = document.getElementById('edit-modal');
+  overlay.style.display = 'none';
+  overlay.style.visibility = 'hidden';
+  overlay.style.opacity = '0';
   idEditando = null;
 }
 
 function guardarEdicion() {
   if (!idEditando) return;
 
-  const titulo  = document.getElementById('edit-titulo').value.trim();
-  const genero  = document.getElementById('edit-genero').value;
-  const puntaje = parseInt(document.getElementById('edit-puntaje').value, 10);
+  const titulo   = document.getElementById('edit-titulo').value.trim();
+  const genero   = document.getElementById('edit-genero').value;
   const estadoEl = document.querySelector('input[name="edit-estado"]:checked');
-  const estado  = estadoEl ? estadoEl.value : null;
+  const estado   = estadoEl ? estadoEl.value : null;
 
-  if (!titulo || !genero || isNaN(puntaje) || puntaje < 1 || puntaje > 10 || !estado) {
-    alert('Completá todos los campos correctamente (puntaje entre 1 y 10).');
+  const puntajeRaw = document.getElementById('edit-puntaje').value;
+  const puntaje    = puntajeRaw !== '' ? parseInt(puntajeRaw, 10) : 0;
+
+  if (!titulo || !genero || !estado) {
+    alert('Título, género y estado son obligatorios.');
+    return;
+  }
+  if (estado === 'vista' && (isNaN(puntaje) || puntaje < 1 || puntaje > 10)) {
+    alert('Las películas vistas requieren un puntaje entre 1 y 10.');
+    return;
+  }
+  if (puntajeRaw !== '' && (isNaN(puntaje) || puntaje < 1 || puntaje > 10)) {
+    alert('El puntaje debe ser un número entre 1 y 10.');
     return;
   }
 
@@ -297,8 +334,9 @@ function guardarEdicion() {
   renderPeliculas();
 }
 
+
+/*registro de eventos*/
 function registrarEventos() {
-  // Botón agregar película
   document.getElementById('btn-agregar')
     .addEventListener('click', agregarPelicula);
 
@@ -328,12 +366,12 @@ function registrarEventos() {
       renderPeliculas();
     });
 
-  document.getElementById('modal-close')
+  document.getElementById('edit-modal-close')
     .addEventListener('click', cerrarModal);
 
-  document.getElementById('modal-overlay')
+  document.getElementById('edit-modal')
     .addEventListener('click', function(e) {
-      if (e.target === this) cerrarModal();
+      if (e.target.id === 'edit-modal') cerrarModal();
     });
 
   document.addEventListener('keydown', function(e) {
@@ -344,9 +382,12 @@ function registrarEventos() {
     .addEventListener('click', guardarEdicion);
 }
 
+
+/*inicializa*/
 function init() {
   peliculas = cargarDesdeStorage();
   registrarEventos();
+  actualizarFiltroGeneros();
   renderPeliculas();
 }
 
